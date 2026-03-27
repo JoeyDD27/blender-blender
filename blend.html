@@ -27,7 +27,6 @@
       border: none;
     }
 
-    /* Default: site1 active (bottom, interactive), site2 overlay on top */
     #frame1 {
       z-index: 1;
       opacity: 1;
@@ -40,78 +39,129 @@
       pointer-events: none;
     }
 
-    #indicator-zone {
+    iframe.darkened {
+      filter: invert(0.88) hue-rotate(180deg);
+    }
+
+    /* Hover zone at bottom center */
+    #bar-zone {
       position: fixed;
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: 400px;
-      height: 80px;
+      width: 600px;
+      height: 70px;
       z-index: 99998;
       pointer-events: auto;
     }
 
-    #indicator {
+    #bar {
       position: absolute;
-      bottom: 14px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 99999;
-      background: rgba(12, 12, 28, 0.92);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(102, 126, 234, 0.35);
+      background: rgba(10, 10, 24, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(102, 126, 234, 0.3);
       border-radius: 10px;
-      padding: 7px 16px;
+      padding: 8px 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       font-family: 'Segoe UI', Tahoma, sans-serif;
       font-size: 13px;
       color: #ccc;
       user-select: none;
-      pointer-events: none;
+      white-space: nowrap;
       opacity: 0;
-      transition: opacity 0.25s;
+      pointer-events: none;
+      transition: opacity 0.2s;
     }
 
-    #indicator-zone:hover #indicator {
+    #bar-zone:hover #bar {
       opacity: 1;
       pointer-events: auto;
     }
 
+    /* Active site dot */
     #dot {
       width: 9px;
       height: 9px;
       border-radius: 50%;
       background: #667eea;
-      transition: background 0.25s;
+      flex-shrink: 0;
+      transition: background 0.2s;
     }
-
     #dot.site2 { background: #c084fc; }
 
-    #label { font-weight: 600; }
+    #label { font-weight: 600; font-size: 12px; }
 
+    /* Percentage slider */
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      pointer-events: auto;
+    }
+
+    .pct-num {
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 28px;
+      text-align: center;
+    }
+    .pct-1 { color: #667eea; }
+    .pct-2 { color: #c084fc; }
+
+    #blend-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 80px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #667eea, #c084fc);
+      outline: none;
+      cursor: pointer;
+    }
+
+    #blend-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #667eea;
+      cursor: pointer;
+    }
+
+    /* Buttons */
     .bar-btn {
       border: none;
-      color: white;
-      font-size: 12px;
+      color: #fff;
+      font-size: 11px;
       font-weight: 600;
-      padding: 5px 14px;
+      padding: 5px 12px;
       border-radius: 6px;
       cursor: pointer;
       pointer-events: auto;
-      transition: opacity 0.2s;
+      transition: opacity 0.15s;
     }
-
     .bar-btn:hover { opacity: 0.8; }
 
     #swap-btn { background: linear-gradient(135deg, #667eea, #764ba2); }
 
-    #dark-btn { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); }
-    #dark-btn.active { background: rgba(102, 126, 234, 0.4); border-color: #667eea; }
-
-    iframe.darkened {
-      filter: invert(0.88) hue-rotate(180deg);
+    /* Dark mode select */
+    #dark-select {
+      pointer-events: auto;
+      background: #2a2a4a;
+      color: #ccc;
+      border: 1px solid #444;
+      border-radius: 5px;
+      padding: 4px 6px;
+      font-size: 11px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -121,13 +171,21 @@
     <iframe id="frame2" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
   </div>
 
-  <div id="indicator-zone">
-    <div id="indicator">
+  <div id="bar-zone">
+    <div id="bar">
       <span id="dot"></span>
-      <span id="label">Using: Site 1 (60%)</span>
+      <span id="label">Site 1</span>
+
+      <div class="slider-group">
+        <span class="pct-num pct-1" id="pct1">60%</span>
+        <input type="range" id="blend-slider" min="0" max="100" value="60">
+        <span class="pct-num pct-2" id="pct2">40%</span>
+      </div>
+
       <button class="bar-btn" id="swap-btn">Swap</button>
-      <select id="dark-select" style="pointer-events:auto; background:#2a2a4a; color:#ccc; border:1px solid #444; border-radius:5px; padding:3px 6px; font-size:11px; cursor:pointer;">
-        <option value="none">Dark Mode: Off</option>
+
+      <select id="dark-select">
+        <option value="none">Dark: Off</option>
         <option value="1">Dark: Site 1</option>
         <option value="2">Dark: Site 2</option>
       </select>

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Website Blender",
-  "version": "3.0",
-  "description": "Pixel-blend two websites (60/40) in a single tab. Mark tabs then blend.",
+  "name": "Toch Fish Tab Blender",
+  "version": "4.0",
+  "description": "Blend two websites into one tab. Mark tabs, adjust percentage, swap, dark mode.",
   "permissions": ["storage", "tabs", "declarativeNetRequestWithHostAccess"],
   "host_permissions": ["<all_urls>"],
   "action": {
@@ -18,7 +18,7 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
-"background": {
+  "background": {
     "service_worker": "background.js"
   }
 }
