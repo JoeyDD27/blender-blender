@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 300px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 18px;
+    }
+
+    h1 {
+      font-size: 17px;
+      text-align: center;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slot {
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slot-badge {
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .badge-60 { background: rgba(102, 126, 234, 0.3); color: #667eea; }
+    .badge-40 { background: rgba(118, 75, 162, 0.3); color: #c084fc; }
+
+    .slot-info { flex: 1; min-width: 0; }
+
+    .slot-title {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #666;
+    }
+
+    .slot-title.set { color: #eee; }
+
+    .slot-btn {
+      background: rgba(102, 126, 234, 0.2);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      color: #667eea;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .slot-btn:hover { background: rgba(102, 126, 234, 0.35); }
+
+    .slot-btn.clear {
+      background: rgba(255, 80, 80, 0.15);
+      border-color: rgba(255, 80, 80, 0.25);
+      color: #ff6b6b;
+      font-size: 10px;
+      padding: 3px 6px;
+    }
+
+    button.blend {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.blend:hover { opacity: 0.9; }
+    button.blend:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .shortcut-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #555;
+      margin-top: 10px;
+    }
+
+    .shortcut-hint kbd {
+      background: #2a2a4a;
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid #444;
+      font-family: monospace;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>Website Blender</h1>
+
+  <div class="slot">
+    <span class="slot-badge badge-60">60%</span>
+    <div class="slot-info">
+      <div class="slot-title" id="title1">No tab marked</div>
+    </div>
+    <button class="slot-btn clear" id="clear1" style="display:none">X</button>
+    <button class="slot-btn" id="mark1">Mark tab</button>
+  </div>
+
+  <div class="slot">
+    <span class="slot-badge badge-40">40%</span>
+    <div class="slot-info">
+      <div class="slot-title" id="title2">No tab marked</div>
+    </div>
+    <button class="slot-btn clear" id="clear2" style="display:none">X</button>
+    <button class="slot-btn" id="mark2">Mark tab</button>
+  </div>
+
+  <button class="blend" id="blend" disabled>Blend Sites</button>
+
+  <div class="shortcut-hint">
+    Use the Swap button on the blend page to switch sites
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
