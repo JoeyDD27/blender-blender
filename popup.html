@@ -27,9 +27,26 @@
       border-radius: 8px;
       padding: 10px 12px;
       margin-bottom: 10px;
+    }
+
+    .slot-label {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .slot-label.label-1 { color: #667eea; }
+    .slot-label.label-2 { color: #c084fc; }
+
+    .slot-row {
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+
+    .slot-buttons {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
     .slot-badge {
@@ -130,31 +147,115 @@
       color: #555;
       margin-top: 10px;
     }
+
+    .url-input {
+      width: 100%;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 4px;
+      color: #eee;
+      font-size: 11px;
+      padding: 4px 6px;
+      margin-top: 5px;
+      outline: none;
+    }
+    .url-input:focus { border-color: #667eea; }
+    .url-input::placeholder { color: #555; }
+
+    .tab-name-section {
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .tab-name-section label {
+      font-size: 11px;
+      color: #999;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .tab-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-name-row select {
+      flex: 1;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 4px;
+      color: #eee;
+      font-size: 11px;
+      padding: 4px 6px;
+      outline: none;
+    }
+    .tab-name-row select:focus { border-color: #667eea; }
+    .custom-name-input {
+      width: 100%;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 4px;
+      color: #eee;
+      font-size: 11px;
+      padding: 4px 6px;
+      margin-top: 5px;
+      outline: none;
+      display: none;
+    }
+    .custom-name-input:focus { border-color: #667eea; }
+    .custom-name-input::placeholder { color: #555; }
   </style>
 </head>
 <body>
   <h1>Tab Blender</h1>
 
   <div class="slot">
-    <span class="slot-badge badge-1" id="badge1">60%</span>
-    <div class="slot-info">
-      <div class="slot-title" id="title1">No tab marked</div>
+    <div class="slot-label label-1">Good student tab</div>
+    <div class="slot-row">
+      <span class="slot-badge badge-1" id="badge1">60%</span>
+      <div class="slot-info">
+        <div class="slot-title" id="title1">No tab marked</div>
+        <input class="url-input" id="urlInput1" type="text" placeholder="Type a URL and press Enter..." style="display:none">
+      </div>
+      <button class="slot-btn clear" id="clear1" style="display:none">X</button>
+      <div class="slot-buttons">
+        <button class="slot-btn" id="mark1">Mark tab</button>
+        <button class="slot-btn" id="useUrl1">Use URL</button>
+      </div>
     </div>
-    <button class="slot-btn clear" id="clear1" style="display:none">X</button>
-    <button class="slot-btn" id="mark1">Mark tab</button>
   </div>
 
   <div class="slot">
-    <span class="slot-badge badge-2" id="badge2">40%</span>
-    <div class="slot-info">
-      <div class="slot-title" id="title2">No tab marked</div>
+    <div class="slot-label label-2">Bad student tab</div>
+    <div class="slot-row">
+      <span class="slot-badge badge-2" id="badge2">40%</span>
+      <div class="slot-info">
+        <div class="slot-title" id="title2">No tab marked</div>
+        <input class="url-input" id="urlInput2" type="text" placeholder="Type a URL and press Enter..." style="display:none">
+      </div>
+      <button class="slot-btn clear" id="clear2" style="display:none">X</button>
+      <div class="slot-buttons">
+        <button class="slot-btn" id="mark2">Mark tab</button>
+        <button class="slot-btn" id="useUrl2">Use URL</button>
+      </div>
     </div>
-    <button class="slot-btn clear" id="clear2" style="display:none">X</button>
-    <button class="slot-btn" id="mark2">Mark tab</button>
+  </div>
+
+  <div class="tab-name-section">
+    <label>Blended tab name</label>
+    <div class="tab-name-row">
+      <select id="tabNameSelect">
+        <option value="tab1">Use good student tab title</option>
+        <option value="tab2">Use bad student tab title</option>
+        <option value="custom">Custom name...</option>
+      </select>
+    </div>
+    <input class="custom-name-input" id="customTabName" type="text" placeholder="Enter custom tab name...">
   </div>
 
   <div class="pct-row">
-    <label>Site 1</label>
+    <label>Good student tab</label>
     <input type="range" id="pctSlider" min="0" max="100" value="60">
     <span class="pct-val" id="pctLabel">60 / 40</span>
   </div>

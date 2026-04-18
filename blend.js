@@ -11,7 +11,17 @@ const pct2El = document.getElementById("pct2");
 const darkSelect = document.getElementById("dark-select");
 
 // Load URLs and percentage from storage
-chrome.storage.local.get(["blendUrls", "blendPct"], (data) => {
+chrome.storage.local.get(["blendUrls", "blendPct", "blendTabName", "blendFavicon"], (data) => {
+  if (data.blendTabName) document.title = data.blendTabName;
+  if (data.blendFavicon) {
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = data.blendFavicon;
+  }
   if (data.blendUrls) {
     frame1.src = data.blendUrls.url1;
     frame2.src = data.blendUrls.url2;
@@ -38,7 +48,7 @@ function applyBlend() {
     frame2.style.pointerEvents = "none";
 
     dot.className = "";
-    label.textContent = "Site 1 (" + site1Pct + "%)";
+    label.textContent = "Good student tab (" + site1Pct + "%)";
   } else {
     // Site 2 on bottom (interactive), site 1 overlaid on top
     frame2.style.zIndex = 1;
@@ -50,7 +60,7 @@ function applyBlend() {
     frame1.style.pointerEvents = "none";
 
     dot.className = "site2";
-    label.textContent = "Site 2 (" + (100 - site1Pct) + "%)";
+    label.textContent = "Bad student tab (" + (100 - site1Pct) + "%)";
   }
 
   pct1El.textContent = site1Pct + "%";
