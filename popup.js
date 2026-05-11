@@ -38,6 +38,7 @@ function updateUI() {
     clear1.style.display = "none";
     mark1.textContent = "Mark tab";
     useUrl1.style.display = "";
+    useUrl1.textContent = "Use URL";
   }
 
   if (marked.url2) {
@@ -54,6 +55,7 @@ function updateUI() {
     clear2.style.display = "none";
     mark2.textContent = "Mark tab";
     useUrl2.style.display = "";
+    useUrl2.textContent = "Use URL";
   }
 
   blendBtn.disabled = !(marked.url1 && marked.url2);
@@ -102,20 +104,6 @@ clear2.addEventListener("click", () => {
   updateUI();
 });
 
-// "Use URL" buttons toggle the URL input field
-useUrl1.addEventListener("click", () => {
-  const show = urlInput1.style.display === "none" || !urlInput1.style.display;
-  urlInput1.style.display = show ? "" : "none";
-  if (show) urlInput1.focus();
-});
-
-useUrl2.addEventListener("click", () => {
-  const show = urlInput2.style.display === "none" || !urlInput2.style.display;
-  urlInput2.style.display = show ? "" : "none";
-  if (show) urlInput2.focus();
-});
-
-// URL input: press Enter to set a URL manually
 function normalizeUrl(raw) {
   raw = raw.trim();
   if (!raw) return null;
@@ -123,30 +111,66 @@ function normalizeUrl(raw) {
   return raw;
 }
 
-urlInput1.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    const url = normalizeUrl(urlInput1.value);
-    if (!url) return;
+function commitUrl(slot) {
+  const input = slot === 1 ? urlInput1 : urlInput2;
+  const url = normalizeUrl(input.value);
+  if (!url) return false;
+  if (slot === 1) {
     marked.url1 = url;
     marked.title1 = url.replace(/^https?:\/\//, "");
     marked.tabId1 = null;
-    chrome.storage.local.set({ blendMarked: marked });
-    urlInput1.value = "";
-    updateUI();
-  }
-});
-
-urlInput2.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    const url = normalizeUrl(urlInput2.value);
-    if (!url) return;
+  } else {
     marked.url2 = url;
     marked.title2 = url.replace(/^https?:\/\//, "");
     marked.tabId2 = null;
-    chrome.storage.local.set({ blendMarked: marked });
-    urlInput2.value = "";
-    updateUI();
   }
+  chrome.storage.local.set({ blendMarked: marked });
+  input.value = "";
+  updateUI();
+  return true;
+}
+
+function setUseUrlButton(slot, mode) {
+  const btn = slot === 1 ? useUrl1 : useUrl2;
+  btn.textContent = mode === "go" ? "Go" : "Use URL";
+}
+
+// "Use URL" button: first click shows the input, second click commits the URL
+function handleUseUrlClick(slot) {
+  const input = slot === 1 ? urlInput1 : urlInput2;
+  const isHidden = getComputedStyle(input).display === "none";
+  if (isHidden) {
+    input.style.display = "block";
+    input.focus();
+    setUseUrlButton(slot, "go");
+    return;
+  }
+  if (input.value.trim()) {
+    commitUrl(slot);
+    setUseUrlButton(slot, "default");
+  } else {
+    input.style.display = "none";
+    setUseUrlButton(slot, "default");
+  }
+}
+
+useUrl1.addEventListener("click", () => handleUseUrlClick(1));
+useUrl2.addEventListener("click", () => handleUseUrlClick(2));
+
+// Auto-commit when the user clicks away from the input
+urlInput1.addEventListener("blur", () => {
+  if (urlInput1.value.trim()) commitUrl(1);
+});
+urlInput2.addEventListener("blur", () => {
+  if (urlInput2.value.trim()) commitUrl(2);
+});
+
+// Enter still works for keyboard users
+urlInput1.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") commitUrl(1);
+});
+urlInput2.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") commitUrl(2);
 });
 
 // Tab name selector
@@ -195,4 +219,48 @@ chrome.storage.local.get(["blendMarked", "blendPct"], (data) => {
     pctSlider.value = pct;
   }
   updateUI();
+});
+
+// Shortcut UI: show the user's actual bindings and let them change them
+const emergencyKeyEl = document.getElementById("emergencyKey");
+const toggleBarKeyEl = document.getElementById("toggleBarKey");
+const configureShortcutEl = document.getElementById("configureShortcut");
+const configureShortcutEl2 = document.getElementById("configureShortcut2");
+
+if (chrome.commands && chrome.commands.getAll) {
+  chrome.commands.getAll((commands) => {
+    const emergency = commands.find((c) => c.name === "emergency");
+    if (emergency) emergencyKeyEl.textContent = emergency.shortcut || "Not set";
+    const toggle = commands.find((c) => c.name === "toggleBar");
+    if (toggle) toggleBarKeyEl.textContent = toggle.shortcut || "Not set";
+  });
+}
+
+function openShortcutsPage(e) {
+  e.preventDefault();
+  chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+}
+configureShortcutEl.addEventListener("click", openShortcutsPage);
+configureShortcutEl2.addEventListener("click", openShortcutsPage);
+
+// Popup visibility slider (0-100%) — dims the popup body, slider stays full opacity
+const popupVis = document.getElementById("popupVis");
+const popupVisLabel = document.getElementById("popupVisLabel");
+const dimmable = document.getElementById("dimmable");
+
+function applyPopupVis(v) {
+  dimmable.style.opacity = v / 100;
+  popupVisLabel.textContent = v + "%";
+}
+
+popupVis.addEventListener("input", () => {
+  const v = parseInt(popupVis.value, 10);
+  chrome.storage.local.set({ popupOpacity: v });
+  applyPopupVis(v);
+});
+
+chrome.storage.local.get(["popupOpacity"], (data) => {
+  const v = data.popupOpacity != null ? data.popupOpacity : 100;
+  popupVis.value = v;
+  applyPopupVis(v);
 });

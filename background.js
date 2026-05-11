@@ -72,3 +72,18 @@ chrome.tabs.onRemoved.addListener(async () => {
     chrome.storage.local.set({ blendActive: false });
   }
 });
+
+// Keyboard shortcuts: emergency snap-to-100% / toggle the blender control bar
+chrome.commands.onCommand.addListener(async (command) => {
+  const tabs = await chrome.tabs.query({ url: chrome.runtime.getURL("blend.html") });
+  if (command === "emergency") {
+    chrome.storage.local.set({ blendPct: 100 });
+    for (const tab of tabs) {
+      chrome.tabs.sendMessage(tab.id, { action: "emergency" }).catch(() => {});
+    }
+  } else if (command === "toggleBar") {
+    for (const tab of tabs) {
+      chrome.tabs.sendMessage(tab.id, { action: "toggleBar" }).catch(() => {});
+    }
+  }
+});

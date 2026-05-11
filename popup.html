@@ -205,9 +205,77 @@
     }
     .custom-name-input:focus { border-color: #667eea; }
     .custom-name-input::placeholder { color: #555; }
+
+    .emergency-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(255, 80, 80, 0.08);
+      border: 1px solid rgba(255, 80, 80, 0.25);
+      border-radius: 6px;
+      font-size: 11px;
+      color: #ddd;
+    }
+    .emergency-row kbd {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: 'Segoe UI', monospace;
+      font-size: 10px;
+      color: #ff9999;
+    }
+    .emergency-row a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 11px;
+    }
+    .emergency-row a:hover { text-decoration: underline; }
+
+    .vis-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+    }
+    .vis-bar .vis-icon {
+      font-size: 12px;
+      color: #999;
+    }
+    .vis-bar label {
+      font-size: 11px;
+      color: #999;
+      flex-shrink: 0;
+    }
+    .vis-bar input[type="range"] {
+      flex: 1;
+      accent-color: #667eea;
+      min-width: 0;
+    }
+    .vis-bar .vis-val {
+      font-size: 11px;
+      font-weight: bold;
+      color: #667eea;
+      min-width: 36px;
+      text-align: right;
+    }
+    #dimmable { transition: opacity 0.15s; }
   </style>
 </head>
 <body>
+  <div class="vis-bar">
+    <span class="vis-icon">visibility</span>
+    <input type="range" id="popupVis" min="0" max="100" value="100">
+    <span class="vis-val" id="popupVisLabel">100%</span>
+  </div>
+
+  <div id="dimmable">
   <h1>Tab Blender</h1>
 
   <div class="slot">
@@ -216,7 +284,7 @@
       <span class="slot-badge badge-1" id="badge1">60%</span>
       <div class="slot-info">
         <div class="slot-title" id="title1">No tab marked</div>
-        <input class="url-input" id="urlInput1" type="text" placeholder="Type a URL and press Enter..." style="display:none">
+        <input class="url-input" id="urlInput1" type="text" placeholder="Type a URL..." style="display:none">
       </div>
       <button class="slot-btn clear" id="clear1" style="display:none">X</button>
       <div class="slot-buttons">
@@ -232,7 +300,7 @@
       <span class="slot-badge badge-2" id="badge2">40%</span>
       <div class="slot-info">
         <div class="slot-title" id="title2">No tab marked</div>
-        <input class="url-input" id="urlInput2" type="text" placeholder="Type a URL and press Enter..." style="display:none">
+        <input class="url-input" id="urlInput2" type="text" placeholder="Type a URL..." style="display:none">
       </div>
       <button class="slot-btn clear" id="clear2" style="display:none">X</button>
       <div class="slot-buttons">
@@ -263,6 +331,17 @@
   <button class="blend" id="blend" disabled>Blend Sites</button>
 
   <div class="note">Opens a new blended tab. Your original tabs stay open.</div>
+
+  <div class="emergency-row">
+    <span>Emergency: <kbd id="emergencyKey">Ctrl+Shift+E</kbd></span>
+    <a href="#" id="configureShortcut">Change</a>
+  </div>
+
+  <div class="emergency-row">
+    <span>Show/hide bar: <kbd id="toggleBarKey">Alt+Shift+B</kbd></span>
+    <a href="#" id="configureShortcut2">Change</a>
+  </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

@@ -87,11 +87,20 @@ darkSelect.addEventListener("change", () => {
   frame2.classList.toggle("darkened", val === "2");
 });
 
-// Listen for toggle from background
+// Listen for toggle / emergency / toggleBar from background
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.action === "toggle") {
     activeSite = activeSite === 1 ? 2 : 1;
     applyBlend();
+  }
+  if (msg.action === "emergency") {
+    activeSite = 1;
+    site1Pct = 100;
+    slider.value = 100;
+    applyBlend();
+  }
+  if (msg.action === "toggleBar") {
+    document.getElementById("bar").classList.toggle("visible");
   }
 });
 

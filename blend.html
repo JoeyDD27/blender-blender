@@ -43,7 +43,7 @@
       filter: invert(0.88) hue-rotate(180deg);
     }
 
-    /* Hover zone at bottom center */
+    /* Bar container at bottom center — toggled by Alt+Shift+B */
     #bar-zone {
       position: fixed;
       bottom: 0;
@@ -52,7 +52,7 @@
       width: 600px;
       height: 70px;
       z-index: 99998;
-      pointer-events: auto;
+      pointer-events: none;
     }
 
     #bar {
@@ -76,10 +76,10 @@
       white-space: nowrap;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.15s;
     }
 
-    #bar-zone:hover #bar {
+    #bar.visible {
       opacity: 1;
       pointer-events: auto;
     }
@@ -102,7 +102,7 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      pointer-events: auto;
+      pointer-events: inherit;
     }
 
     .pct-num {
@@ -145,7 +145,7 @@
       padding: 5px 12px;
       border-radius: 6px;
       cursor: pointer;
-      pointer-events: auto;
+      pointer-events: inherit;
       transition: opacity 0.15s;
     }
     .bar-btn:hover { opacity: 0.8; }
@@ -154,7 +154,7 @@
 
     /* Dark mode select */
     #dark-select {
-      pointer-events: auto;
+      pointer-events: inherit;
       background: #2a2a4a;
       color: #ccc;
       border: 1px solid #444;
