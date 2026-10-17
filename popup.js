@@ -61,6 +61,8 @@ function updateUI() {
   blendBtn.disabled = !(marked.url1 && marked.url2);
 }
 
+const noteEl = document.getElementById("note");
+
 pctSlider.addEventListener("input", () => {
   pct = parseInt(pctSlider.value);
   chrome.storage.local.set({ blendPct: pct });
@@ -195,19 +197,23 @@ function getChosenFavicon() {
 blendBtn.addEventListener("click", () => {
   const tabName = getChosenTabName();
   const tabFavicon = getChosenFavicon();
-  chrome.storage.local.set({
-    blendUrls: { url1: marked.url1, url2: marked.url2 },
-    blendPct: pct,
-    blendTabName: tabName,
-    blendFavicon: tabFavicon
-  });
 
+  // Every blend: the good student tab is the real tab, the bad student tab goes on top.
+  // Don't rename the good tab to its own title (that would freeze it).
+  const keepOwn = tabNameSelect.value === "tab1";
+  chrome.storage.local.set({ blendPct: pct });
   chrome.runtime.sendMessage({
-    action: "startBlend",
-    tabId1: marked.tabId1,
-    tabId2: marked.tabId2
-  }, () => {
-    window.close();
+    action: "startOverlay",
+    baseSlot: 1,
+    tabName: keepOwn ? null : tabName,
+    favicon: keepOwn ? null : tabFavicon
+  }, (resp) => {
+    if (resp && resp.ok) {
+      window.close();
+    } else {
+      noteEl.classList.add("error");
+      noteEl.textContent = (resp && resp.error) || "Couldn't start the blend.";
+    }
   });
 });
 

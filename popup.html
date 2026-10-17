@@ -20,6 +20,15 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+    h1 .wip {
+      font-size: 9px;
+      font-weight: 600;
+      vertical-align: middle;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #555;
+      -webkit-text-fill-color: #888;
+    }
 
     .slot {
       background: #16213e;
@@ -140,6 +149,7 @@
 
     button.blend:hover { opacity: 0.9; }
     button.blend:disabled { opacity: 0.35; cursor: not-allowed; }
+    .note.error { color: #ff8a8a; }
 
     .note {
       text-align: center;
@@ -276,7 +286,7 @@
   </div>
 
   <div id="dimmable">
-  <h1>Tab Blender</h1>
+  <h1>blender-blender 2.0 <span class="wip">in progress</span></h1>
 
   <div class="slot">
     <div class="slot-label label-1">Good student tab</div>
@@ -330,15 +340,15 @@
 
   <button class="blend" id="blend" disabled>Blend Sites</button>
 
-  <div class="note">Opens a new blended tab. Your original tabs stay open.</div>
+  <div class="note" id="note">Opens the good student tab and puts the bad student tab on top.</div>
 
   <div class="emergency-row">
-    <span>Emergency: <kbd id="emergencyKey">Ctrl+Shift+E</kbd></span>
+    <span>Emergency (toggle): <kbd id="emergencyKey">⌘X</kbd></span>
     <a href="#" id="configureShortcut">Change</a>
   </div>
 
   <div class="emergency-row">
-    <span>Show/hide bar: <kbd id="toggleBarKey">Alt+Shift+B</kbd></span>
+    <span>Show/hide bar: <kbd id="toggleBarKey">⌘K</kbd></span>
     <a href="#" id="configureShortcut2">Change</a>
   </div>
   </div>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Wrapper the overlay loads inside the real tab. Being an extension page means
+       the real site's own security rules can't block it; the site inside it loads
+       with the same header stripping as the normal blend tab. -->
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+  </style>
+</head>
+<body>
+  <iframe id="site" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" allow="autoplay; fullscreen; clipboard-write"></iframe>
+  <script src="overlay-frame.js"></script>
+</body>
+</html>

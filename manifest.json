@@ -1,10 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Toch Fish Tab Blender",
-  "version": "4.0",
-  "description": "Blend two websites into one tab. Mark tabs, adjust percentage, swap, dark mode.",
-  "permissions": ["storage", "tabs", "declarativeNetRequestWithHostAccess"],
-  "host_permissions": ["<all_urls>"],
+  "name": "blender-blender",
+  "version": "2.0",
+  "version_name": "2.0 (in progress)",
+  "description": "Blend two websites: opens the good student tab and puts the bad student tab on top. Adjust percentage, swap, dark mode, emergency toggle.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "declarativeNetRequestWithHostAccess",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -24,17 +32,28 @@
   "commands": {
     "emergency": {
       "suggested_key": {
-        "default": "Ctrl+Shift+E",
-        "mac": "Command+Shift+E"
+        "default": "Ctrl+X",
+        "mac": "Command+X"
       },
-      "description": "Emergency: instantly show 100% good student tab"
+      "description": "Emergency toggle: show 100% good student tab, press again to restore"
     },
     "toggleBar": {
       "suggested_key": {
-        "default": "Alt+Shift+B",
-        "mac": "Alt+Shift+B"
+        "default": "Ctrl+K",
+        "mac": "Command+K"
       },
       "description": "Show/hide the blender control bar"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "overlay-frame.html",
+        "overlay-frame.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
 }
