@@ -8,7 +8,8 @@
     "storage",
     "tabs",
     "declarativeNetRequestWithHostAccess",
-    "scripting"
+    "scripting",
+    "webNavigation"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -49,7 +50,9 @@
     {
       "resources": [
         "overlay-frame.html",
-        "overlay-frame.js"
+        "overlay-frame.js",
+        "keys-config.js",
+        "keys.js"
       ],
       "matches": [
         "<all_urls>"

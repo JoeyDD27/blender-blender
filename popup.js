@@ -270,3 +270,54 @@ chrome.storage.local.get(["popupOpacity"], (data) => {
   popupVis.value = v;
   applyPopupVis(v);
 });
+
+// ---- Mute tab (same switch as the Mute button on the control bar) ----
+const muteBadEl = document.getElementById("muteBad");
+chrome.storage.local.get("muteBad", (d) => { muteBadEl.checked = !!d.muteBad; });
+muteBadEl.addEventListener("change", () => {
+  chrome.storage.local.set({ muteBad: muteBadEl.checked }); // background does the muting
+});
+chrome.storage.onChanged.addListener((c, area) => {
+  if (area === "local" && c.muteBad) muteBadEl.checked = !!c.muteBad.newValue;
+});
+
+// ---- Peek / nudge keys: click Change, then press the new key combo ----
+let keyBindings = BB_KEYS.defaults;
+let capturing = null; // which binding is waiting for a key press
+
+function showKeys() {
+  for (const name of ["peek", "nudgeLeft", "nudgeRight"]) {
+    document.getElementById("key-" + name).textContent =
+      capturing === name ? "Press keys…" : BB_KEYS.label(keyBindings[name]);
+  }
+  document.querySelectorAll(".change-key").forEach((a) => {
+    const on = a.dataset.key === capturing;
+    a.classList.toggle("capturing", on);
+    a.textContent = on ? "Cancel" : "Change";
+  });
+}
+
+BB_KEYS.load((b) => { keyBindings = b; showKeys(); });
+
+document.querySelectorAll(".change-key").forEach((a) => {
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    capturing = capturing === a.dataset.key ? null : a.dataset.key;
+    showKeys();
+  });
+});
+
+document.addEventListener("keydown", (e) => {
+  if (!capturing) return;
+  e.preventDefault();
+  if (e.key === "Escape") { capturing = null; showKeys(); return; }
+  if (["Meta", "Control", "Alt", "Shift"].includes(e.key)) return; // wait for the main key
+  keyBindings = {
+    ...keyBindings,
+    [capturing]: { code: e.code, meta: e.metaKey, ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey }
+  };
+  chrome.storage.local.set({ keyBindings });
+  capturing = null;
+  showKeys();
+}, true);
+

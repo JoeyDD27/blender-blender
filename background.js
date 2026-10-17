@@ -1,5 +1,7 @@
-// Strip X-Frame-Options and CSP so any site loads in our iframes
-async function enableFrameBypass() {
+// Strip X-Frame-Options and CSP so the bad student site can load on top of the good
+// one. Only applies inside the blended tab — every other tab keeps its normal
+// anti-framing protection.
+async function enableFrameBypass(tabId) {
   await chrome.declarativeNetRequest.updateSessionRules({
     removeRuleIds: [1],
     addRules: [{
@@ -13,7 +15,8 @@ async function enableFrameBypass() {
         ]
       },
       condition: {
-        resourceTypes: ["sub_frame"]
+        resourceTypes: ["sub_frame"],
+        tabIds: [tabId]
       }
     }]
   });
@@ -45,6 +48,7 @@ async function getOverlay() {
 // Chrome restarted / extension reloaded: drop any blend left over from before
 chrome.runtime.onStartup.addListener(() => { getOverlay(); });
 chrome.runtime.onInstalled.addListener(() => { getOverlay(); });
+
 
 // Turn the header stripping off once no blend is running
 async function cleanupIfIdle() {
@@ -92,7 +96,7 @@ async function startOverlay(msg) {
   }
   if (!tab) tab = await chrome.tabs.create({ url: baseUrl, active: true });
 
-  await enableFrameBypass();
+  await enableFrameBypass(tab.id);
   await chrome.storage.local.set({
     overlayState: {
       tabId: tab.id,
@@ -115,7 +119,9 @@ async function startOverlay(msg) {
       await cleanupIfIdle();
       return { ok: false, error: "Chrome doesn't let extensions draw on this page (chrome:// pages, the Web Store, etc.)." };
     }
+    injectKeys(tab.id); // frames already on the page
   }
+  applyMute();
   return { ok: true };
 }
 
@@ -123,6 +129,9 @@ async function stopOverlay() {
   const ov = await getOverlay();
   if (!ov) return;
   await chrome.storage.local.remove("overlayState");
+  // Don't leave the good student tab muted after the blend ends
+  const { muteBad } = await chrome.storage.local.get("muteBad");
+  if (muteBad) chrome.tabs.update(ov.tabId, { muted: false }).catch(() => {});
   chrome.tabs.sendMessage(ov.tabId, { action: "overlayStop" }).catch(() => {});
   await cleanupIfIdle();
 }
@@ -134,12 +143,59 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (ov && ov.tabId === tabId) injectOverlay(tabId);
 });
 
+// ---------- Peek / nudge keys ----------
+// keys.js goes into every frame of the blended tab (including the bad student
+// site and anything loaded later), so the keys work wherever the focus is.
+function injectKeys(tabId, frameId) {
+  const target = frameId == null ? { tabId, allFrames: true } : { tabId, frameIds: [frameId] };
+  chrome.scripting.executeScript({ target, files: ["keys-config.js", "keys.js"] }).catch(() => {});
+}
+
+chrome.webNavigation.onDOMContentLoaded.addListener(async (d) => {
+  const ov = await getOverlay();
+  if (ov && ov.tabId === d.tabId) injectKeys(d.tabId, d.frameId);
+});
+
+// ---------- Mute tab ----------
+// Mutes the blended tab (the bad student site plays inside it) and the original
+// bad student tab if it's still open. Chrome can only mute whole tabs.
+async function applyMute() {
+  const { muteBad, blendMarked: m } = await chrome.storage.local.get(["muteBad", "blendMarked"]);
+  const ov = await getOverlay();
+  const ids = new Set();
+  if (ov) ids.add(ov.tabId);
+  if (m && m.tabId2 != null) ids.add(m.tabId2);
+  for (const id of ids) {
+    try { await chrome.tabs.update(id, { muted: !!muteBad }); } catch (e) {}
+  }
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.muteBad) applyMute();
+});
+
 // ---------- Messages ----------
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "startOverlay") {
     startOverlay(msg).then(sendResponse);
     return true;
+  }
+
+  if (msg.action === "keysHello") {
+    const tabId = sender.tab && sender.tab.id;
+    getOverlay().then((ov) => sendResponse({ tabId, active: !!ov && ov.tabId === tabId }));
+    return true;
+  }
+
+  if (msg.action === "blendKey") {
+    const tabId = sender.tab && sender.tab.id;
+    getOverlay().then((ov) => {
+      if (ov && ov.tabId === tabId) {
+        chrome.tabs.sendMessage(tabId, { action: "key", kind: msg.kind, delta: msg.delta }, { frameId: 0 }).catch(() => {});
+      }
+    });
+    return false;
   }
 
   if (msg.action === "stopOverlay") {
@@ -161,11 +217,13 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 // 2nd press puts it back exactly how it was before the emergency.
 // Presses are queued so mashing the key can't make the on/off state get out of sync.
 let emergencyQueue = Promise.resolve();
-function toggleEmergency() {
+// force: undefined = toggle, true = only turn ON
+function toggleEmergency(force) {
   emergencyQueue = emergencyQueue.then(async () => {
     const ids = await targetTabIds();
     if (ids.length === 0) return; // nothing blended, nothing to hide
     const { emergencyOn } = await chrome.storage.local.get("emergencyOn");
+    if (force === true && emergencyOn) return; // already hidden
     const on = !emergencyOn;
     await chrome.storage.local.set({ emergencyOn: on });
     for (const id of ids) {

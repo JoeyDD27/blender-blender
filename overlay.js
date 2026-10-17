@@ -9,8 +9,10 @@
   let site1Pct = 60;      // % of the good student tab (same meaning as everywhere else)
   let activeSite = 1;     // which site gets clicks: 1 = good, 2 = bad
   let emergencySaved = null;
+  let peekSaved = null;   // blend % to go back to when the peek key is released
+  let muted = false;
 
-  let host, ov, darkLayer, dot, label, slider, pct1El, pct2El, darkSelect, bar;
+  let host, ov, darkLayer, dot, label, slider, pct1El, pct2El, darkSelect, bar, hud, muteBtn, hudTimer;
   let headObserver = null, hostObserver = null;
   const originalTitle = document.title;
   const iconChanges = []; // [{ link, oldHref, created }]
@@ -56,7 +58,13 @@
         #stop { background: rgba(255,80,80,0.25); color: #ff8a8a; }
         select { background: #2a2a4a; color: #ccc; border: 1px solid #444; border-radius: 5px;
                  padding: 4px 6px; font-size: 11px; cursor: pointer; }
-        .tag { font-size: 10px; color: #888; border: 1px solid #444; border-radius: 4px; padding: 1px 5px; }
+        #mute { background: #2a2a4a; color: #ccc; border: 1px solid #444; }
+        #mute.on { background: rgba(192,132,252,0.25); color: #e3c4ff; border-color: #c084fc; }
+        #hud { position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+               background: rgba(10,10,24,0.88); color: #ddd; border-radius: 8px;
+               padding: 5px 12px; font: 600 12px 'Segoe UI', Tahoma, sans-serif;
+               opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+        #hud.show { opacity: 0.03; } /* barely visible on purpose */
       </style>
       <div id="dark"></div>
       <iframe id="ov" allow="autoplay; fullscreen; clipboard-write"></iframe>
@@ -74,8 +82,10 @@
           <option value="1">Dark: Good student tab</option>
           <option value="2">Dark: Bad student tab</option>
         </select>
+        <button class="btn" id="mute">Mute tab</button>
         <button class="btn" id="stop">Stop</button>
-      </div>`;
+      </div>
+      <div id="hud"></div>`;
 
     ov = root.getElementById("ov");
     darkLayer = root.getElementById("dark");
@@ -86,6 +96,11 @@
     pct1El = root.getElementById("pct1");
     pct2El = root.getElementById("pct2");
     darkSelect = root.getElementById("dark-select");
+    hud = root.getElementById("hud");
+    muteBtn = root.getElementById("mute");
+    muteBtn.addEventListener("click", () => {
+      chrome.storage.local.set({ muteBad: !muted }); // background does the muting
+    });
 
     ov.src = chrome.runtime.getURL("overlay-frame.html") + "?url=" + encodeURIComponent(st.otherUrl);
 
@@ -175,6 +190,7 @@
   // ---- Emergency toggle (same behaviour as the blend tab) ----
   function enterEmergency() {
     if (emergencySaved) return;
+    peekEnd();
     emergencySaved = { site1Pct, activeSite };
     activeSite = 1;
     site1Pct = 100;
@@ -193,6 +209,48 @@
     chrome.storage.local.set({ emergencyOn: false });
   }
 
+  // ---- Peek: hold the key to see 100% bad student tab, release to go back ----
+  function peekStart() {
+    if (emergencySaved || peekSaved !== null) return; // never peek during an emergency
+    peekSaved = site1Pct;
+    site1Pct = 0;
+    applyBlend();
+  }
+  function peekEnd() {
+    if (peekSaved === null) return;
+    site1Pct = peekSaved;
+    peekSaved = null;
+    applyBlend();
+  }
+
+  // ---- Nudge: move the blend 1% at a time ----
+  function nudge(delta) {
+    if (peekSaved !== null) return;
+    cancelEmergency();
+    site1Pct = Math.max(0, Math.min(100, site1Pct + delta));
+    chrome.storage.local.set({ blendPct: site1Pct });
+    applyBlend();
+    showHud("Good " + site1Pct + "%  ·  Bad " + (100 - site1Pct) + "%");
+  }
+
+  function showHud(text) {
+    hud.textContent = text;
+    hud.classList.add("show");
+    clearTimeout(hudTimer);
+    hudTimer = setTimeout(() => hud.classList.remove("show"), 900);
+  }
+
+  function applyMuteButton() {
+    muteBtn.classList.toggle("on", muted);
+    muteBtn.textContent = muted ? "Tab muted" : "Mute tab";
+  }
+  function onStorage(c, area) {
+    if (area === "local" && c.muteBad) {
+      muted = !!c.muteBad.newValue;
+      applyMuteButton();
+    }
+  }
+
   function teardown() {
     if (hostObserver) hostObserver.disconnect();
     if (headObserver) headObserver.disconnect();
@@ -203,6 +261,7 @@
       else c.link.href = c.oldHref;
     }
     chrome.runtime.onMessage.removeListener(onMessage);
+    chrome.storage.onChanged.removeListener(onStorage);
     window.__tochOverlay = false;
   }
 
@@ -210,17 +269,25 @@
     if (msg.action === "emergency") msg.on ? enterEmergency() : exitEmergency();
     if (msg.action === "toggleBar") bar.classList.toggle("visible");
     if (msg.action === "overlayStop") teardown();
+    if (msg.action === "key") {
+      if (msg.kind === "peekStart") peekStart();
+      if (msg.kind === "peekEnd") peekEnd();
+      if (msg.kind === "nudge") nudge(msg.delta);
+    }
   }
 
-  chrome.storage.local.get(["overlayState", "blendPct", "emergencyOn"], (d) => {
+  chrome.storage.local.get(["overlayState", "blendPct", "emergencyOn", "muteBad"], (d) => {
     st = d.overlayState;
     if (!st) { window.__tochOverlay = false; return; }
     if (d.blendPct != null) site1Pct = d.blendPct;
+    muted = !!d.muteBad;
     activeSite = st.baseSlot; // start with the real page taking your clicks
     build();
     applyBlend();
+    applyMuteButton();
     watchHead();
     if (d.emergencyOn) enterEmergency(); // reloaded mid-emergency: stay hidden
     chrome.runtime.onMessage.addListener(onMessage);
+    chrome.storage.onChanged.addListener(onStorage);
   });
 })();

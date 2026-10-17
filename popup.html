@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -124,6 +125,7 @@
 
     .pct-row input[type="range"] {
       flex: 1;
+      min-width: 0;
       accent-color: #667eea;
     }
 
@@ -243,6 +245,32 @@
       font-size: 11px;
     }
     .emergency-row a:hover { text-decoration: underline; }
+    .emergency-row a.capturing { color: #ffcc66; }
+
+    .mute-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #ccc;
+    }
+    .switch { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch span {
+      position: absolute; inset: 0; cursor: pointer; border-radius: 9px;
+      background: #2a2a4a; border: 1px solid #444; transition: background 0.15s;
+    }
+    .switch span::before {
+      content: ""; position: absolute; width: 12px; height: 12px; left: 2px; top: 2px;
+      border-radius: 50%; background: #999; transition: transform 0.15s, background 0.15s;
+    }
+    .switch input:checked + span { background: rgba(192, 132, 252, 0.35); border-color: #c084fc; }
+    .switch input:checked + span::before { transform: translateX(16px); background: #fff; }
 
     .vis-bar {
       display: flex;
@@ -338,6 +366,12 @@
     <span class="pct-val" id="pctLabel">60 / 40</span>
   </div>
 
+  <label class="mute-row" for="muteBad">
+    <span>Mute tab</span>
+    <span class="switch"><input type="checkbox" id="muteBad"><span></span></span>
+  </label>
+
+
   <button class="blend" id="blend" disabled>Blend Sites</button>
 
   <div class="note" id="note">Opens the good student tab and puts the bad student tab on top.</div>
@@ -351,8 +385,24 @@
     <span>Show/hide bar: <kbd id="toggleBarKey">⌘K</kbd></span>
     <a href="#" id="configureShortcut2">Change</a>
   </div>
+
+  <div class="emergency-row">
+    <span>Peek (hold): <kbd id="key-peek"></kbd></span>
+    <a href="#" class="change-key" data-key="peek">Change</a>
   </div>
 
+  <div class="emergency-row">
+    <span>Nudge blend 1% left: <kbd id="key-nudgeLeft"></kbd></span>
+    <a href="#" class="change-key" data-key="nudgeLeft">Change</a>
+  </div>
+
+  <div class="emergency-row">
+    <span>Nudge blend 1% right: <kbd id="key-nudgeRight"></kbd></span>
+    <a href="#" class="change-key" data-key="nudgeRight">Change</a>
+  </div>
+  </div>
+
+  <script src="keys-config.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
