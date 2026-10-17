@@ -227,28 +227,6 @@ chrome.storage.local.get(["blendMarked", "blendPct"], (data) => {
   updateUI();
 });
 
-// Shortcut UI: show the user's actual bindings and let them change them
-const emergencyKeyEl = document.getElementById("emergencyKey");
-const toggleBarKeyEl = document.getElementById("toggleBarKey");
-const configureShortcutEl = document.getElementById("configureShortcut");
-const configureShortcutEl2 = document.getElementById("configureShortcut2");
-
-if (chrome.commands && chrome.commands.getAll) {
-  chrome.commands.getAll((commands) => {
-    const emergency = commands.find((c) => c.name === "emergency");
-    if (emergency) emergencyKeyEl.textContent = emergency.shortcut || "Not set";
-    const toggle = commands.find((c) => c.name === "toggleBar");
-    if (toggle) toggleBarKeyEl.textContent = toggle.shortcut || "Not set";
-  });
-}
-
-function openShortcutsPage(e) {
-  e.preventDefault();
-  chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
-}
-configureShortcutEl.addEventListener("click", openShortcutsPage);
-configureShortcutEl2.addEventListener("click", openShortcutsPage);
-
 // Popup visibility slider (0-100%) — dims the popup body, slider stays full opacity
 const popupVis = document.getElementById("popupVis");
 const popupVisLabel = document.getElementById("popupVisLabel");
@@ -281,12 +259,14 @@ chrome.storage.onChanged.addListener((c, area) => {
   if (area === "local" && c.muteBad) muteBadEl.checked = !!c.muteBad.newValue;
 });
 
-// ---- Peek / nudge keys: click Change, then press the new key combo ----
+// ---- Shortcut keys (all of them): click Change, then press the new key combo ----
 let keyBindings = BB_KEYS.defaults;
+const keyNote = document.getElementById("keyNote");
+const KEY_NOTE = keyNote.textContent;
 let capturing = null; // which binding is waiting for a key press
 
 function showKeys() {
-  for (const name of ["peek", "nudgeLeft", "nudgeRight"]) {
+  for (const name of Object.keys(BB_KEYS.defaults)) {
     document.getElementById("key-" + name).textContent =
       capturing === name ? "Press keys…" : BB_KEYS.label(keyBindings[name]);
   }
@@ -310,12 +290,25 @@ document.querySelectorAll(".change-key").forEach((a) => {
 document.addEventListener("keydown", (e) => {
   if (!capturing) return;
   e.preventDefault();
-  if (e.key === "Escape") { capturing = null; showKeys(); return; }
+  if (e.key === "Escape") {
+    capturing = null;
+    keyNote.textContent = KEY_NOTE;
+    keyNote.classList.remove("error");
+    showKeys();
+    return;
+  }
   if (["Meta", "Control", "Alt", "Shift"].includes(e.key)) return; // wait for the main key
-  keyBindings = {
-    ...keyBindings,
-    [capturing]: { code: e.code, meta: e.metaKey, ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey }
-  };
+  const combo = { code: e.code, meta: e.metaKey, ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey };
+  // Don't let two actions share one key
+  const clash = Object.keys(keyBindings).find((k) => k !== capturing && BB_KEYS.same(keyBindings[k], combo));
+  if (clash) {
+    keyNote.textContent = BB_KEYS.label(combo) + " is already used for " + BB_KEYS.names[clash] + ". Try another.";
+    keyNote.classList.add("error");
+    return; // keep waiting for a different key
+  }
+  keyNote.textContent = KEY_NOTE;
+  keyNote.classList.remove("error");
+  keyBindings = { ...keyBindings, [capturing]: combo };
   chrome.storage.local.set({ keyBindings });
   capturing = null;
   showKeys();

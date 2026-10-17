@@ -29,22 +29,6 @@
   "background": {
     "service_worker": "background.js"
   },
-  "commands": {
-    "emergency": {
-      "suggested_key": {
-        "default": "Ctrl+X",
-        "mac": "Command+X"
-      },
-      "description": "Emergency toggle: show 100% good student tab, press again to restore"
-    },
-    "toggleBar": {
-      "suggested_key": {
-        "default": "Ctrl+K",
-        "mac": "Command+K"
-      },
-      "description": "Show/hide the blender control bar"
-    }
-  },
   "web_accessible_resources": [
     {
       "resources": [

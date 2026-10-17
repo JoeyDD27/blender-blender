@@ -1,5 +1,5 @@
 // Runs in every frame of the blended tab (the good student page, the bad student
-// overlay and anything embedded in them) so the peek / nudge keys work wherever
+// overlay and anything embedded in them) so all the shortcut keys work wherever
 // the focus is. Key presses are sent to the background, which forwards them to the
 // overlay in the top frame.
 (() => {
@@ -43,6 +43,14 @@
 
   window.addEventListener("keydown", (e) => {
     if (!enabled) return;
+    for (const kind of ["emergency", "toggleBar"]) {
+      if (BB_KEYS.matches(bindings[kind], e)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (!e.repeat) send(kind); // holding the key down doesn't flip it back and forth
+        return;
+      }
+    }
     if (BB_KEYS.matches(bindings.peek, e)) {
       e.preventDefault();
       e.stopImmediatePropagation();

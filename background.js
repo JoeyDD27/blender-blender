@@ -191,7 +191,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "blendKey") {
     const tabId = sender.tab && sender.tab.id;
     getOverlay().then((ov) => {
-      if (ov && ov.tabId === tabId) {
+      if (!ov || ov.tabId !== tabId) return;
+      if (msg.kind === "emergency") toggleEmergency();
+      else if (msg.kind === "toggleBar") {
+        chrome.tabs.sendMessage(tabId, { action: "toggleBar" }, { frameId: 0 }).catch(() => {});
+      } else {
         chrome.tabs.sendMessage(tabId, { action: "key", kind: msg.kind, delta: msg.delta }, { frameId: 0 }).catch(() => {});
       }
     });
@@ -232,14 +236,3 @@ function toggleEmergency(force) {
   }).catch(() => {});
   return emergencyQueue;
 }
-
-// Keyboard shortcuts: emergency toggle / toggle the blender control bar
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command === "emergency") {
-    toggleEmergency();
-  } else if (command === "toggleBar") {
-    for (const id of await targetTabIds()) {
-      chrome.tabs.sendMessage(id, { action: "toggleBar" }).catch(() => {});
-    }
-  }
-});

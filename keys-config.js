@@ -1,7 +1,8 @@
-// Peek / nudge key settings, shared by the popup and keys.js.
-// These keys are handled inside the blended tab itself (not as Chrome shortcuts)
-// because Chrome shortcuts can't tell when a key is released (needed for "hold to
-// peek") and only allow 4 default keys per extension.
+// All blender-blender shortcut keys, shared by the popup and keys.js.
+// They're handled inside the blended tab itself (not as Chrome shortcuts) so every
+// one of them can be changed from the popup — Chrome doesn't let extensions change
+// their own Chrome shortcuts, can't tell when a key is released (needed for "hold to
+// peek"), and only allows 4 default keys.
 globalThis.BB_KEYS = globalThis.BB_KEYS || (() => {
   const isMac = /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
   const mod = isMac
@@ -9,6 +10,8 @@ globalThis.BB_KEYS = globalThis.BB_KEYS || (() => {
     : { meta: false, ctrl: true, alt: false, shift: false };
 
   const defaults = {
+    emergency: { code: "KeyX", ...mod },
+    toggleBar: { code: "KeyK", ...mod },
     peek: { code: "KeyF", ...mod },
     nudgeLeft: { code: "ArrowLeft", ...mod },
     nudgeRight: { code: "ArrowRight", ...mod }
@@ -48,5 +51,18 @@ globalThis.BB_KEYS = globalThis.BB_KEYS || (() => {
     chrome.storage.local.get("keyBindings", (d) => cb({ ...defaults, ...(d.keyBindings || {}) }));
   }
 
-  return { isMac, defaults, matches, isRelease, label, load };
+  const names = {
+    emergency: "Emergency",
+    toggleBar: "Show/hide bar",
+    peek: "Peek",
+    nudgeLeft: "Nudge left",
+    nudgeRight: "Nudge right"
+  };
+
+  function same(a, b) {
+    return !!a && !!b && a.code === b.code && !!a.meta === !!b.meta && !!a.ctrl === !!b.ctrl &&
+      !!a.alt === !!b.alt && !!a.shift === !!b.shift;
+  }
+
+  return { isMac, defaults, names, matches, isRelease, label, load, same };
 })();
