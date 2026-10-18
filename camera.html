@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Hidden background page (Chrome "offscreen document"). Only exists while a blend
+       is running AND Face emergency is switched on, so the camera is off otherwise. -->
+</head>
+<body>
+  <video id="cam" playsinline muted></video>
+  <iframe id="face" src="face-sandbox.html"></iframe>
+  <script src="face-detector.js"></script>
+  <script src="camera.js"></script>
+</body>
+</html>

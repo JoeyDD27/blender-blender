@@ -8,7 +8,8 @@
     "tabs",
     "declarativeNetRequestWithHostAccess",
     "scripting",
-    "webNavigation"
+    "webNavigation",
+    "offscreen"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -41,5 +42,10 @@
         "<all_urls>"
       ]
     }
-  ]
+  ],
+  "sandbox": {
+    "pages": [
+      "face-sandbox.html"
+    ]
+  }
 }

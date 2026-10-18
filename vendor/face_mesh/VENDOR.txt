@@ -1,0 +1,4 @@
+@mediapipe/face_mesh 0.4.1633559619 (Apache-2.0, by Google), copied unmodified from npm.
+Only the SIMD build is included (every current Chrome supports it).
+It runs inside face-sandbox.html, a sandboxed extension page, because the library
+needs features (new Function) that normal extension pages don't allow.

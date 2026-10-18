@@ -46,8 +46,36 @@ async function getOverlay() {
 }
 
 // Chrome restarted / extension reloaded: drop any blend left over from before
-chrome.runtime.onStartup.addListener(() => { getOverlay(); });
-chrome.runtime.onInstalled.addListener(() => { getOverlay(); });
+chrome.runtime.onStartup.addListener(() => { getOverlay().then(syncCamera); });
+chrome.runtime.onInstalled.addListener(() => { getOverlay().then(syncCamera); });
+
+// ---------- Face emergency ----------
+// The camera runs (in a hidden offscreen page) only while a blend is running AND the
+// Face emergency switch is on. When someone new looks at the screen it turns the
+// emergency ON — it never un-hides by itself.
+let cameraQueue = Promise.resolve();
+function syncCamera() {
+  cameraQueue = cameraQueue.then(async () => {
+    const { faceEnabled } = await chrome.storage.local.get("faceEnabled");
+    const want = !!faceEnabled && !!(await getOverlay());
+    const has = (await chrome.runtime.getContexts({ contextTypes: ["OFFSCREEN_DOCUMENT"] })).length > 0;
+    if (want && !has) {
+      await chrome.offscreen.createDocument({
+        url: "camera.html",
+        reasons: ["USER_MEDIA"],
+        justification: "Watches for someone new looking at the screen while a blend is running"
+      });
+    } else if (!want && has) {
+      await chrome.offscreen.closeDocument();
+      chrome.storage.local.set({ faceStatus: "off" });
+    }
+  }).catch(() => {});
+  return cameraQueue;
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && (changes.overlayState || changes.faceEnabled)) syncCamera();
+});
 
 
 // Turn the header stripping off once no blend is running
@@ -202,6 +230,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return false;
   }
 
+  if (msg.action === "faceTrigger") {
+    toggleEmergency(true);
+    return false;
+  }
+
+  if (msg.action === "cameraStatus") {
+    chrome.storage.local.set({
+      faceStatus: msg.status,
+      faceFps: msg.fps == null ? null : msg.fps,
+      faceSeen: msg.people == null ? null : { people: msg.people, looking: msg.looking, normal: msg.normal }
+    });
+    // Permission was taken away: switch the feature off instead of retrying forever
+    if (msg.status === "no-permission") chrome.storage.local.set({ faceEnabled: false });
+    return false;
+  }
+
   if (msg.action === "stopOverlay") {
     stopOverlay().then(() => sendResponse({ ok: true }));
     return true;
@@ -221,7 +265,7 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 // 2nd press puts it back exactly how it was before the emergency.
 // Presses are queued so mashing the key can't make the on/off state get out of sync.
 let emergencyQueue = Promise.resolve();
-// force: undefined = toggle, true = only turn ON
+// force: undefined = toggle, true = only turn ON (used by face emergency)
 function toggleEmergency(force) {
   emergencyQueue = emergencyQueue.then(async () => {
     const ids = await targetTabIds();

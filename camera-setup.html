@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>blender-blender · Face emergency</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; display: grid; place-items: center; padding: 16px;
+           background: #1a1a2e; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    .card { max-width: 420px; background: #16213e; border: 1px solid #2a2a4a;
+            border-radius: 12px; padding: 24px; }
+    h1 { font-size: 18px; margin-bottom: 12px;
+         background: linear-gradient(135deg, #667eea, #764ba2);
+         -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    p { font-size: 13px; line-height: 1.55; color: #aaa; margin-bottom: 10px; }
+    button { margin-top: 8px; width: 100%; padding: 10px; border: none; border-radius: 6px;
+             background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+             font-size: 14px; font-weight: 600; cursor: pointer; }
+    #msg { margin-top: 12px; font-size: 13px; min-height: 18px; }
+    #msg.ok { color: #8be28b; } #msg.err { color: #ff8a8a; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Face emergency (beta)</h1>
+    <p>When someone new turns to look at your screen, blender-blender switches to 100% good student tab. It fires once per new person: if it was a false alarm, press ⌘X to come back and it won’t fire again for that person.</p>
+    <p>It needs your camera. Video is checked on this computer only and never saved or sent anywhere.
+       The camera is only on while a blend is running with Face emergency switched on
+       (your camera light will be on then).</p>
+    <button id="allow">Allow camera</button>
+    <div id="msg"></div>
+  </div>
+  <script src="camera-setup.js"></script>
+</body>
+</html>

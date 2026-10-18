@@ -314,3 +314,48 @@ document.addEventListener("keydown", (e) => {
   showKeys();
 }, true);
 
+
+// ---- Face emergency ----
+const faceEl = document.getElementById("faceEnabled");
+const faceStatusEl = document.getElementById("faceStatus");
+
+function showFaceStatus(enabled, status, fps, seen) {
+  faceEl.checked = !!enabled;
+  faceStatusEl.classList.toggle("on", !!enabled && status === "watching" && (fps == null || fps >= 4));
+  faceStatusEl.classList.toggle("warn", !!enabled && status === "watching" && fps != null && fps > 0 && fps < 4);
+  if (!enabled) faceStatusEl.textContent = "Hides when someone new looks";
+  else if (status === "watching") {
+    faceStatusEl.textContent = fps == null ? "Watching (camera on)"
+      : fps === 0 ? "Warming up…"
+      : fps >= 4 ? "Watching · " + fps + " checks/s"
+      : "Watching · only " + fps + " checks/s (may be slow)";
+    // Other people seen / looking at the screen / how many looking is OK right now
+    if (seen) faceStatusEl.textContent += " · others " + seen.people + ", looking " + seen.looking + " (ok " + seen.normal + ")";
+  }
+  else if (status === "starting") faceStatusEl.textContent = "Starting camera…";
+  else if (status === "no-camera") faceStatusEl.textContent = "No camera found";
+  else faceStatusEl.textContent = "Camera turns on during a blend";
+}
+
+const refreshFace = () => chrome.storage.local.get(["faceEnabled", "faceStatus", "faceFps", "faceSeen"],
+  (d) => showFaceStatus(d.faceEnabled, d.faceStatus, d.faceFps, d.faceSeen));
+refreshFace();
+chrome.storage.onChanged.addListener((c, area) => {
+  if (area === "local" && (c.faceEnabled || c.faceStatus || c.faceFps || c.faceSeen)) refreshFace();
+});
+
+faceEl.addEventListener("change", async () => {
+  if (!faceEl.checked) {
+    chrome.storage.local.set({ faceEnabled: false });
+    return;
+  }
+  // Needs camera permission once; a popup can't ask for it, so use a small tab
+  let state = "prompt";
+  try { state = (await navigator.permissions.query({ name: "camera" })).state; } catch (e) {}
+  if (state === "granted") {
+    chrome.storage.local.set({ faceEnabled: true });
+  } else {
+    faceEl.checked = false;
+    chrome.tabs.create({ url: chrome.runtime.getURL("camera-setup.html") });
+  }
+});
